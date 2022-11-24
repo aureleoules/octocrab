@@ -5,7 +5,7 @@ mod list;
 mod list_labels;
 mod update;
 
-use crate::models::CommentId;
+use crate::models::{CommentId, ReactionId};
 use crate::{models, params, Octocrab, Result};
 
 pub use self::{
@@ -799,7 +799,7 @@ impl<'octo> IssueHandler<'octo> {
     /// # async fn run() -> octocrab::Result<()> {
     /// let reactions = octocrab::instance()
     ///     .issues("owner", "repo")
-    ///     .list_comment_reactions(1)
+    ///     .list_comment_reactions(1.into())
     ///     .per_page(100)
     ///     .page(2u32)
     ///     .send()
@@ -807,7 +807,7 @@ impl<'octo> IssueHandler<'octo> {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn list_comment_reactions(&self, comment_id: u64) -> ListCommentReactionsBuilder<'_, '_> {
+    pub fn list_comment_reactions(&self, comment_id: CommentId) -> ListCommentReactionsBuilder<'_, '_> {
         ListCommentReactionsBuilder::new(self, comment_id)
     }
 }
@@ -862,7 +862,7 @@ impl<'octo, 'r> ListReactionsBuilder<'octo, 'r> {
 pub struct ListCommentReactionsBuilder<'octo, 'r> {
     #[serde(skip)]
     handler: &'r IssueHandler<'octo>,
-    comment_id: u64,
+    comment_id: CommentId,
     #[serde(skip_serializing_if = "Option::is_none")]
     per_page: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -870,7 +870,7 @@ pub struct ListCommentReactionsBuilder<'octo, 'r> {
 }
 
 impl<'octo, 'r> ListCommentReactionsBuilder<'octo, 'r> {
-    pub(crate) fn new(handler: &'r IssueHandler<'octo>, comment_id: u64) -> Self {
+    pub(crate) fn new(handler: &'r IssueHandler<'octo>, comment_id: CommentId) -> Self {
         Self {
             handler,
             comment_id,
@@ -929,7 +929,7 @@ impl<'octo> IssueHandler<'octo> {
     /// # async fn run() -> octocrab::Result<()> {
     /// octocrab::instance()
     ///     .issues("owner", "repo")
-    ///     .create_comment_reaction(1, octocrab::models::reactions::ReactionContent::PlusOne)
+    ///     .create_comment_reaction(1.into(), octocrab::models::reactions::ReactionContent::PlusOne)
     ///     .send()
     ///     .await?;
     /// # Ok(())
@@ -937,7 +937,7 @@ impl<'octo> IssueHandler<'octo> {
     /// ```
     pub fn create_comment_reaction(
         &self,
-        comment_id: u64,
+        comment_id: CommentId,
         content: models::reactions::ReactionContent,
     ) -> CreateCommentReactionBuilder<'_, '_> {
         CreateCommentReactionBuilder::new(self, comment_id, content)
@@ -982,14 +982,14 @@ impl<'octo, 'r> CreateReactionBuilder<'octo, 'r> {
 pub struct CreateCommentReactionBuilder<'octo, 'r> {
     #[serde(skip)]
     handler: &'r IssueHandler<'octo>,
-    comment_id: u64,
+    comment_id: CommentId,
     content: models::reactions::ReactionContent,
 }
 
 impl<'octo, 'r> CreateCommentReactionBuilder<'octo, 'r> {
     pub(crate) fn new(
         handler: &'r IssueHandler<'octo>,
-        comment_id: u64,
+        comment_id: CommentId,
         content: models::reactions::ReactionContent,
     ) -> Self {
         Self {
@@ -1018,13 +1018,13 @@ impl<'octo> IssueHandler<'octo> {
     /// # async fn run() -> octocrab::Result<()> {
     /// octocrab::instance()
     ///     .issues("owner", "repo")
-    ///     .delete_reaction(1, 1)
+    ///     .delete_reaction(1, 1.into())
     ///     .send()
     ///     .await?;
     /// # Ok(())
     /// # }
     /// ```
-    pub fn delete_reaction(&self, issue_number: u64, reaction_id: u64) -> DeleteReactionBuilder<'_, '_> {
+    pub fn delete_reaction(&self, issue_number: u64, reaction_id: ReactionId) -> DeleteReactionBuilder<'_, '_> {
         DeleteReactionBuilder::new(self, issue_number, reaction_id)
     }
 
@@ -1033,7 +1033,7 @@ impl<'octo> IssueHandler<'octo> {
     /// # async fn run() -> octocrab::Result<()> {
     /// octocrab::instance()
     ///     .issues("owner", "repo")
-    ///     .delete_comment_reaction(1, 1)
+    ///     .delete_comment_reaction(1.into(), 1.into())
     ///     .send()
     ///     .await?;
     /// # Ok(())
@@ -1041,8 +1041,8 @@ impl<'octo> IssueHandler<'octo> {
     /// ```
     pub fn delete_comment_reaction(
         &self,
-        comment_id: u64,
-        reaction_id: u64,
+        comment_id: CommentId,
+        reaction_id: ReactionId,
     ) -> DeleteCommentReactionBuilder<'_, '_> {
         DeleteCommentReactionBuilder::new(self, comment_id, reaction_id)
     }
@@ -1053,14 +1053,14 @@ pub struct DeleteReactionBuilder<'octo, 'r> {
     #[serde(skip)]
     handler: &'r IssueHandler<'octo>,
     issue_number: u64,
-    reaction_id: u64,
+    reaction_id: ReactionId,
 }
 
 impl<'octo, 'r> DeleteReactionBuilder<'octo, 'r> {
     pub(crate) fn new(
         handler: &'r IssueHandler<'octo>,
         issue_number: u64,
-        reaction_id: u64,
+        reaction_id: ReactionId,
     ) -> Self {
         Self {
             handler,
@@ -1087,15 +1087,15 @@ impl<'octo, 'r> DeleteReactionBuilder<'octo, 'r> {
 pub struct DeleteCommentReactionBuilder<'octo, 'r> {
     #[serde(skip)]
     handler: &'r IssueHandler<'octo>,
-    comment_id: u64,
-    reaction_id: u64,
+    comment_id: CommentId,
+    reaction_id: ReactionId,
 }
 
 impl<'octo, 'r> DeleteCommentReactionBuilder<'octo, 'r> {
     pub(crate) fn new(
         handler: &'r IssueHandler<'octo>,
-        comment_id: u64,
-        reaction_id: u64,
+        comment_id: CommentId,
+        reaction_id: ReactionId,
     ) -> Self {
         Self {
             handler,
